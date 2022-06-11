@@ -94,3 +94,13 @@ RUN a2enmod rewrite headers
 
 # Cleanup
 RUN rm -rf /usr/src/*
+
+# Install Composer
+RUN php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer \
+    && rm -rf /var/lib/apt/lists/*
+
+# Node.js
+RUN curl -sL https://deb.nodesource.com/setup_17.x -o nodesource_setup.sh \
+    && bash nodesource_setup.sh \
+    && apt-get install nodejs -y
+
