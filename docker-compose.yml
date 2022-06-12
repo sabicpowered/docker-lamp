@@ -1,4 +1,4 @@
-version: "4"
+version: "3"
 
 services:
   webserver1:
@@ -38,7 +38,7 @@ services:
       - "${HOST_MACHINE_SECURE_HOST_PORT2}:443"
     links:
       - database
-    volumes: 
+    volumes:
       - ${DOCUMENT_ROOT-./www}:/var/www/html
       - ${PHP_INI-./config/php/php.ini}:/usr/local/etc/php/php.ini
       - ${VHOSTS_DIR-./config/vhosts}:/etc/apache2/sites-enabled
@@ -54,7 +54,7 @@ services:
       HOST_MACHINE_MYSQL_PORT: ${HOST_MACHINE_MYSQL_PORT}
       XDEBUG_CONFIG: "client_host=host.docker.internal remote_port=${XDEBUG_PORT}"
     extra_hosts:
-       - "host.docker.internal:host-gateway"
+      - "host.docker.internal:host-gateway"
   database:
     build:
       context: "./bin/${DATABASE}"
@@ -62,7 +62,7 @@ services:
     restart: 'always'
     ports:
       - "127.0.0.1:${HOST_MACHINE_MYSQL_PORT}:3306"
-    volumes: 
+    volumes:
       - ${MYSQL_INITDB_DIR-./config/initdb}:/docker-entrypoint-initdb.d
       - ${MYSQL_DATA_DIR-./data/mysql}:/var/lib/mysql
       - ${MYSQL_LOG_DIR-./logs/mysql}:/var/log/mysql
@@ -88,7 +88,7 @@ services:
       MEMORY_LIMIT: ${MEMORY_LIMIT}
     ports:
       - '${HOST_MACHINE_PMA_PORT}:80'
-    volumes: 
+    volumes:
       - /sessions
       - ${PHP_INI-./config/php/php.ini}:/usr/local/etc/php/conf.d/php-phpmyadmin.ini
   redis:
@@ -96,3 +96,32 @@ services:
     image: redis:latest
     ports:
       - "127.0.0.1:${HOST_MACHINE_REDIS_PORT}:6379"
+  mongo:
+    image: mongo
+    restart: always
+    container_name: '${COMPOSE_PROJECT_NAME}-mongo'
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+    ports:
+      - "127.0.0.1:${HOST_MACHINE_MONGO_PORT}:27017"
+    volumes:
+      - ${MONGO_DATA_DIR-./data/mongo}:/data/db
+      - ${MONGO_ARCHIVE_DIR-./data/mongo/archive}:/Databases/dev.archive
+      - ${MONGO_LOG_DIR-./logs/mongo}:/Databases/production
+  mongo-express:
+    image: mongo-express
+    restart: always
+    container_name: '${COMPOSE_PROJECT_NAME}-mongo-express'
+    ports:
+      - "127.0.0.1:${HOST_MACHINE_ME_PORT}:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_ROOT_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD}
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_PORT: "27017"
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongo:27017/?authSource=admin
+#      ME_CONFIG_BASICAUTH_USERNAME: ${ME_USER}
+#      ME_CONFIG_BASICAUTH_PASSWORD: ${ME_PASSWORD}
+    links:
+      - mongo
