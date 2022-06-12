@@ -1,4 +1,4 @@
-/.env
+*.env
 /.vscode
 /config/*
 /data/*
@@ -7,3 +7,4 @@
 .DS_Store
 /buildtest
 /.idea
+/khonak-kar/**
