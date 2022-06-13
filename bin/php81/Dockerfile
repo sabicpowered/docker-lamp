@@ -90,7 +90,7 @@ libpng-dev && \
     docker-php-ext-install gd
 
 # Enable apache modules
-RUN a2enmod rewrite headers
+RUN a2enmod ssl && a2ensite default-ssl && a2enmod rewrite
 
 # Cleanup
 RUN rm -rf /usr/src/*
