@@ -1,0 +1,1094 @@
+<!doctype html>
+<html lang=en-GB>
+<head>
+    <meta charset=UTF-8>
+    <meta name=viewport content="width=device-width,initial-scale=1">
+    <title>Setup an Apache, PHP, and HTTPS development environment with Docker</title>
+    <link rel=preload href=/css/main.css?1.5.4 as=style>
+    <script type=module src=/js/main.js?1.5.4></script>
+    <script src=/js/a.js?1.5.4 defer></script>
+    <link rel=manifest href=/manifest.webmanifest>
+    <link rel=canonical href=https://dockerwebdev.com/tutorials/docker-php-development/ >
+    <meta name=description
+          content="Quickly create a robust PHP project development environment on your local machine with Apache and locally-trusted HTTPS certificates.">
+    <meta name=keywords
+          content="apache, php, ssl, https, server, docker, docker-compose, docker swarm, kubernetes, learn, training, course, book, video, introduction, tutorial, web, development, environment, dependencies, deployment, production, windows, mac os, linux">
+    <meta name=author content="Craig Buckler">
+    <meta name=robots content="index, follow">
+    <meta name=application-name content="Docker for Web Developers">
+    <meta name=theme-color content=#232c33>
+    <meta name=mobile-web-app-capable content=yes>
+    <meta name=apple-touch-fullscreen content=yes>
+    <meta name=apple-mobile-web-app-title content="Docker for Web Developers">
+    <meta name=apple-mobile-web-app-capable content=yes>
+    <meta name=apple-mobile-web-app-status-bar-style content=default>
+    <link rel=icon type=image/svg+xml href=/images/icons/logo.svg>
+    <link rel="alternate icon" sizes=50x50 href=/images/icons/logo.png>
+    <link rel=apple-touch-icon sizes=192x192 href=/images/icons/docker-192.png>
+    <link rel=apple-touch-icon sizes=152x152 href=/images/icons/docker-152.png>
+    <link rel=apple-touch-icon sizes=120x120 href=/images/icons/docker-120.png>
+    <link rel=apple-touch-icon sizes=96x96 href=/images/icons/docker-096.png>
+    <link rel=apple-touch-icon sizes=76x76 href=/images/icons/docker-076.png>
+    <link rel=apple-touch-startup-image href=/images/icons/docker-512.png>
+    <link rel=sitemap type=application/xml href=https://dockerwebdev.com/sitemap.xml>
+    <link rel=alternate type=application/rss+xml title="Docker for Web Developers"
+          href=https://dockerwebdev.com/feed.xml>
+    <link rel=alternate type=application/atom+xml title="Docker for Web Developers"
+          href=https://dockerwebdev.com/feed.xml>
+    <meta property=og:site_name content="Docker for Web Developers">
+    <meta property=og:url content=https://dockerwebdev.com/tutorials/docker-php-development/ >
+    <meta property=og:title content="Setup an Apache, PHP, and HTTPS development environment with Docker">
+    <meta property=og:description
+          content="Quickly create a robust PHP project development environment on your local machine with Apache and locally-trusted HTTPS certificates.">
+    <meta property=og:image content=https://dockerwebdev.com/images/share/docker-apache-php-https.png>
+    <meta property=og:type content=article>
+    <meta property=og:locale content=en-GB>
+    <meta property=twitter:card content=summary>
+    <meta property=twitter:site content=@craigbuckler>
+    <meta property=twitter:creator content=@craigbuckler>
+    <meta name=twitter:card content=summary_large_image>
+    <meta property=twitter:title content="Setup an Apache, PHP, and HTTPS development environment with Docker">
+    <meta property=twitter:description
+          content="Quickly create a robust PHP project development environment on your local machine with Apache and locally-trusted HTTPS certificates.">
+    <meta property=twitter:image content=https://dockerwebdev.com/images/share/docker-apache-php-https.png>
+    <style>@keyframes video {
+               to {
+                   transform: translateX(0)
+               }
+           }
+
+    @keyframes book {
+        to {
+            transform: rotateY(-15deg) translateZ(0)
+        }
+    }
+
+    *, :after, :before {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0
+    }
+
+    img {
+        display: block;
+        height: auto;
+        margin: 1.5em auto 2em;
+        max-width: 100%
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        html {
+            scroll-behavior: auto !important
+        }
+
+        *, :after, :before {
+            animation-delay: 0s !important;
+            animation-iteration-count: 1 !important;
+            animation-timing-function: step-start !important;
+            transition-timing-function: step-start !important
+        }
+
+        a:active, a:focus, a:hover {
+            transform: none !important
+        }
+
+        #docker-whale, path#docker-sea {
+            animation: none !important
+        }
+    }
+
+    .slantdark1 {
+        background: repeating-linear-gradient(-4deg, #232c33, #232c33 30%, #1c2227 0, #1c2227) no-repeat 0 0;
+        background-size: 100% 15rem
+    }
+
+    .slantdark5 {
+        background: repeating-linear-gradient(-5deg, #232c33, #232c33 20%, #1c2227 0, #1c2227)
+    }
+
+    .slantlight2 {
+        background: repeating-linear-gradient(2deg, #1c2227, #1c2227 80%, #232c33 0, #232c33) no-repeat 0 0;
+        background-size: 100% 20rem
+    }
+
+    :root {
+        font-size: calc(100% + .8vmin)
+    }
+
+    body, html {
+        min-height: 100%
+    }
+
+    html {
+        scroll-behavior: smooth
+    }
+
+    body {
+        background-color: #1c2227;
+        color: #e7e8eb;
+        font-family: Corbel, Lucida Sans, DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif;
+        font-size: 100%;
+        font-weight: 300;
+        line-height: 1.4;
+        margin: 0;
+        overflow-y: scroll;
+        padding: 0
+    }
+
+    main {
+        background-color: #232c33
+    }
+
+    @media (-ms-high-contrast: active),(-ms-high-contrast: none) {
+        :root {
+            font-size: 140%
+        }
+
+        article, aside, details, footer, header, main, summary {
+            display: block
+        }
+
+        .book * {
+            position: relative
+        }
+
+        .coursevideo {
+            display: none
+        }
+    }
+
+    blockquote, dt, h1, h2, h3, summary {
+        color: #f28024;
+        font-family: Cambria, Hoefler Text, Utopia, "Liberation Serif", Nimbus Roman No9 L Regular, Times, Times New Roman, serif;
+        line-height: 1.1;
+        scroll-margin-top: 4rem
+    }
+
+    h1, h2 {
+        font-weight: 400
+    }
+
+    h1 {
+        font-size: 2.8em
+    }
+
+    h1 span {
+        display: block;
+        font-size: .5em
+    }
+
+    h2 {
+        font-size: 2.1em
+    }
+
+    dt, h2, h3, summary {
+        margin-top: 2em
+    }
+
+    .intro, blockquote, dt, h3, summary {
+        font-size: 1.4em;
+        font-weight: 400
+    }
+
+    a.headlink:link, a.headlink:visited {
+        font-size: .75em;
+        outline: 0;
+        text-decoration: none;
+        -webkit-user-select: none;
+        user-select: none;
+        vertical-align: top;
+        visibility: hidden
+    }
+
+    :active > a.headlink:link :focus > a.headlink:link, :active > a.headlink:visited :focus > a.headlink:visited, :hover > a.headlink:link, :hover > a.headlink:visited {
+        visibility: visible
+    }
+
+    ol, p, ul {
+        margin-top: 1em
+    }
+
+    aside, blockquote {
+        margin-bottom: 2em;
+        margin-top: 2em
+    }
+
+    main h2 + p, main h3 + p {
+        margin-top: .2em
+    }
+
+    blockquote {
+        background-color: #1c2227;
+        border-left: 1vw solid #046fbd;
+        -webkit-clip-path: polygon(0 0, 100% 15%, 100% 85%, 0 100%);
+        clip-path: polygon(0 0, 100% 15%, 100% 85%, 0 100%)
+    }
+
+    blockquote:nth-of-type(2n) {
+        border-left: 0;
+        border-right: 1vw solid #046fbd;
+        -webkit-clip-path: polygon(0 15%, 100% 0, 100% 100%, 0 85%);
+        clip-path: polygon(0 15%, 100% 0, 100% 100%, 0 85%)
+    }
+
+    blockquote p {
+        padding-bottom: 1.5em;
+        padding-top: 1.5em
+    }
+
+    cite {
+        display: block;
+        font-size: .75em;
+        font-style: normal;
+        margin-top: .75em;
+        text-align: right
+    }
+
+    aside {
+        background-color: #1c2227;
+        border-color: #046fbd;
+        border-style: solid none;
+        border-width: 3px;
+        padding-bottom: 1em
+    }
+
+    aside p, blockquote p {
+        font-style: italic;
+        text-align: center
+    }
+
+    aside:first-of-type {
+        font-size: 1.2em
+    }
+
+    .primary ol ol, .primary ol ul, .primary ul ol, .primary ul ul, ol, ul {
+        padding-left: 2.5em
+    }
+
+    ul {
+        list-style-type: square
+    }
+
+    li {
+        margin-top: .8em;
+        padding-left: .25em
+    }
+
+    a, strong {
+        font-weight: 400
+    }
+
+    del {
+        color: #c22;
+        font-weight: 300
+    }
+
+    .note, kbd {
+        font-size: .85em
+    }
+
+    kbd {
+        background-color: #e7e8eb;
+        border-radius: 3px;
+        box-shadow: 0 .15em 0 #f28024;
+        color: #1c2227;
+        font-family: Inconsolata, Monaco, Consolas, Courier New, Courier, monospace;
+        padding: 0 .2em
+    }
+
+    hr {
+        border: 0;
+        border-top: 3px dotted #046fbd;
+        height: 0;
+        margin: 4em auto;
+        max-width: 100%;
+        padding: 0;
+        width: 18rem
+    }
+
+    .note {
+        margin-top: .85em;
+        text-align: center
+    }
+
+    .time {
+        color: #c0c4cb;
+        margin-top: 0
+    }
+
+    .words {
+        font-style: italic;
+        margin-bottom: 2em;
+        margin-top: 0
+    }
+
+    a:link, a:visited {
+        color: #6abbf6;
+        outline-offset: .2em;
+        text-decoration: underline
+    }
+
+    a:active, a:focus, a:hover {
+        filter: hue-rotate(20deg) brightness(1.3);
+        outline: 2px dotted currentColor
+    }
+
+    .button, .button:link, .button:visited {
+        background-color: #0053a2;
+        border-radius: .2em;
+        color: #e7e8eb;
+        display: block;
+        line-height: 2;
+        margin: 0 auto;
+        padding: 0 1em;
+        text-align: center;
+        text-decoration: none;
+        text-transform: uppercase;
+        width: 8em
+    }
+
+    main article:first-child {
+        padding-top: 4em
+    }
+
+    .nextback > *, .pagenav > *, .primary ol, .primary ul, .primary > :not(blockquote):not(aside):not(ul):not(ol):not(pre):not(.copycode), .taglist > *, aside p, blockquote p {
+        margin-left: auto;
+        margin-right: auto;
+        max-width: 36rem;
+        padding-left: 4vw;
+        padding-right: 4vw
+    }
+
+    .primary ol, .primary ul {
+        padding-left: calc(4vw + 2.5em)
+    }
+
+    .flex2 {
+        display: flex;
+        flex-direction: row-reverse;
+        flex-wrap: wrap;
+        gap: 4vw;
+        justify-content: center;
+        margin-left: auto;
+        margin-right: auto;
+        padding-left: 4vw;
+        padding-right: 4vw
+    }
+
+    .flex2 > * {
+        max-width: 24rem;
+        width: 100%
+    }
+
+    header {
+        align-items: center;
+        -webkit-backdrop-filter: blur(3px);
+        backdrop-filter: blur(3px);
+        display: flex;
+        flex-flow: row nowrap;
+        justify-content: space-between;
+        left: 0;
+        line-height: 1.2;
+        padding: 2px;
+        position: fixed;
+        right: 0;
+        top: 0;
+        -webkit-user-select: none;
+        user-select: none;
+        z-index: 1
+    }
+
+    header, header ul ul {
+        background-color: #141414d9
+    }
+
+    header a:link, header a:visited {
+        display: block;
+        outline-offset: 0;
+        padding: .7em .6em;
+        text-decoration: none
+    }
+
+    header p {
+        margin: 0
+    }
+
+    header svg {
+        height: 100%;
+        position: absolute;
+        top: 0;
+        width: 2em
+    }
+
+    header span {
+        display: block;
+        letter-spacing: -.03em;
+        overflow: hidden;
+        padding-left: 2.2em;
+        white-space: nowrap;
+        width: 0
+    }
+
+    @media (min-width: 36em) {
+        header span {
+            width: auto
+        }
+    }
+
+    .menu li, .menu ul {
+        list-style-type: none;
+        margin: 0;
+        padding: 0
+    }
+
+    .menu > ul {
+        display: flex;
+        flex-direction: row
+    }
+
+    .menu li {
+        perspective: 300px;
+        perspective-origin: 50% 100%;
+        position: relative;
+        transform-style: preserve-3d
+    }
+
+    .menu li ul {
+        opacity: 0;
+        padding: 2px 0;
+        position: absolute;
+        top: 100%;
+        transform: translateY(2px) rotateX(-90deg);
+        transform-origin: 0 0;
+        transition: all .3s cubic-bezier(.5, 0, .5, 1.3);
+        transition-property: opacity transform
+    }
+
+    .menu li:focus-within ul, .menu li:hover ul {
+        opacity: 1;
+        transform: translateY(2px) rotateX(0)
+    }
+
+    .menu a {
+        white-space: nowrap
+    }
+
+    .menu .active {
+        color: #e7e8eb;
+        pointer-events: none
+    }
+
+    ul.prices {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        list-style-type: none;
+        margin-top: 1.5em;
+        padding-left: 0;
+        padding-right: 0
+    }
+
+    ul.prices li {
+        text-align: center
+    }
+
+    ul.prices a {
+        display: block;
+        text-decoration: none
+    }
+
+    ul.prices p {
+        color: #e7e8eb;
+        margin: 0
+    }
+
+    ul.prices span {
+        color: #e7e8eb;
+        display: block;
+        font-size: .75em
+    }
+
+    ul.prices .price, ul.prices h2 {
+        font-size: 1.2em;
+        margin-top: 0
+    }
+
+    ul.prices .button {
+        margin-top: .4em;
+        padding: 0;
+        width: 7.5em
+    }
+
+    ul.prices li:not(.feature) .button {
+        background-color: #2d363e
+    }
+
+    ul.prices .price {
+        color: #3c3;
+        font-weight: 700
+    }
+
+    .pagedlist {
+        margin-top: 1.5em
+    }
+
+    .pagedlist li, .pagedlist ul {
+        list-style-type: none;
+        margin: 0;
+        padding: 0
+    }
+
+    .pagedlist ul {
+        display: flex;
+        flex-flow: row wrap;
+        gap: 15px;
+        justify-content: space-between
+    }
+
+    .pagedlist li {
+        flex: 1 1 14em
+    }
+
+    .pagedlist a {
+        background-color: #1c2227;
+        border: 2px solid #046fbd;
+        display: block;
+        min-height: 100%;
+        padding: 2.5vmin;
+        text-decoration: none;
+        transform: translateY(0) scale(1);
+        transition: transform .3s ease-out
+    }
+
+    .pagedlist a:active, .pagedlist a:focus, .pagedlist a:hover {
+        transform: translateY(-10px) scale(1.03)
+    }
+
+    .pagedlist a > * {
+        font-weight: 300;
+        margin: 0
+    }
+
+    .pagedlist a > :not(h2) {
+        color: #e7e8eb
+    }
+
+    .pagedlist a > .time {
+        color: #c0c4cb
+    }
+
+    .pagedlist h2 {
+        font-size: 1.4em
+    }
+
+    .pagedlist .time {
+        font-size: .85em
+    }
+
+    .pagedlist p:not(.time) {
+        line-height: 1.2;
+        margin-top: .5rem
+    }
+
+    .imgcircle {
+        margin-top: 1em
+    }
+
+    .imgcircle img {
+        border-radius: 50%;
+        float: left;
+        max-width: 33%;
+        shape-margin: .5rem;
+        shape-outside: circle(50%)
+    }
+
+    .book, .media {
+        position: relative
+    }
+
+    .media {
+        filter: drop-shadow(0 8px 10px rgba(0, 0, 0, .5));
+        max-width: 20rem;
+        perspective: 1000px
+    }
+
+    .media .coursevideo {
+        animation: video 2.5s ease-in-out 2s 1 forwards;
+        bottom: 0;
+        left: -5vw;
+        position: absolute;
+        transform: translateX(-3vw);
+        width: 90%
+    }
+
+    .book {
+        animation: book 2s ease-in-out 2s 1 forwards;
+        margin: 0;
+        padding: 1rem 0;
+        transform: rotateY(-25deg);
+        transform-origin: 100% 0;
+        transform-style: preserve-3d;
+        width: calc(100% - 2rem)
+    }
+
+    .book h1 {
+        font-size: 2.2rem
+    }
+
+    .book .intro, .book h1 {
+        line-height: 1;
+        margin-top: .5em;
+        text-align: center
+    }
+
+    .book, .book:before {
+        background-color: #232c33;
+        border-radius: 3px
+    }
+
+    .book:after, .book:before {
+        content: "";
+        position: absolute
+    }
+
+    .book:before {
+        height: 100%;
+        left: 0;
+        top: 0;
+        transform: translateX(1rem) translateZ(-2rem);
+        width: 100%
+    }
+
+    .book:after {
+        background-image: repeating-linear-gradient(90deg, #ddd, #ddd 2px, #aaa 0, #aaa 4px);
+        height: 98%;
+        left: 98%;
+        top: 1%;
+        transform: rotateY(60deg);
+        transform-origin: bottom left;
+        width: 2rem
+    }
+
+    #docker {
+        display: block;
+        height: auto;
+        margin: 2em auto;
+        width: 80%
+    }
+
+    #install {
+        display: none
+    }
+
+    #install.active {
+        display: block
+    }</style>
+    <link rel=stylesheet href=/css/main.css?1.5.4 media=print onload="this.media='all'">
+    <noscript>
+        <link rel=stylesheet href=/css/main.css?1.5.4>
+    </noscript>
+</head>
+<body>
+<header>
+    <p><a href=/>
+        <svg width=50 height=50 aria-labelledby=logo-title viewBox="0 0 512 512">
+            <path stroke=#066da5 stroke-width=38
+                  d="M296 226h42m-92 0h42m-91 0h42m-91 0h41m-91 0h42m8-46h41m8 0h42m7 0h42m-42-46h42"/>
+            <path fill=#066da5
+                  d="M472 228s-18-17-55-11c-4-29-35-46-35-46s-29 35-8 74c-6 3-16 7-31 7H68c-5 19-5 145 133 145 99 0 173-46 208-130 52 4 63-39 63-39"/>
+        </svg>
+        <span id=logo-title>Docker for Web Developers</span></a></p>
+    <nav class=menu>
+        <ul>
+            <li><a href=/>buy</a></li>
+            <li><a href=/course/ >course</a>
+                <ul>
+                    <li><a href=/course/samples/ >samples</a></li>
+                    <li><a href=/course/contents/ >contents</a></li>
+                    <li><a href=/course/requirements/ >requirements</a></li>
+                    <li><a href=/course/tutor/ >tutor</a></li>
+                    <li><a href=/course/faq/ >faq</a></li>
+                </ul>
+            </li>
+            <li><a href=/tutorials/ >tutorials</a>
+                <ul>
+                    <li><a href=/tag/ >topics</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main>
+    <article class="primary slantdark1"><h1 id=titlemain>Setup an Apache, PHP, and HTTPS development environment with
+        Docker</h1>
+        <p class=time>
+            <time datetime=2021-03-12>12 March, 2021</time>
+        </p>
+        <p class=words>1,500 words, 8-minute read</p>
+        <aside><p>This Docker tutorial explains how to run a PHP application using Apache and <em>real</em> SSL
+            certificates on any Windows, mac OS, or Linux development PC.</p></aside>
+        <p>PHP may not be the trendiest technology but it’s used by many developers and projects. According to <a
+                href=https://w3techs.com/ >W3Techs in December 2020</a>, <a
+                href=https://w3techs.com/technologies/overview/programming_language>PHP is used on 79% of all
+            websites</a>. That estimate may be unrealistic since sites may not – and ideally <em>shouldn’t</em> –
+            announce their stack. However, a more reliable statistic is that <a
+                    href=https://w3techs.com/technologies/details/cm-wordpress>WordPress powers 40% of the web</a> and
+            the <abbr title="Content Management System">CMS</abbr> runs on PHP.</p>
+        <p>I rarely embark on new PHP projects but have many legacy sites and apps with folders full of
+            <code>.php</code> files. Installing PHP can be time-consuming and error prone. There are various versions
+            and you’ll encounter further complexities when integrating PHP with a web server such as Apache to match a
+            real hosting solutions.</p>
+        <p>Additionally, Windows users are offered a <a href=https://windows.php.net/download/ >confusing array of
+            options</a> although the situation is about to become easier – <em>Microsoft is dropping PHP support in
+            Windows</em>:</p>
+        <blockquote><p>“We are not going to be supporting PHP for Windows in any capacity for version 8.0 and
+            beyond.”<br><cite><a href=https://news-web.php.net/php.internals/110907>Dale Hirt, Microsoft</a></cite></p>
+        </blockquote>
+        <p>Someone is likely to compile Windows editions and the <a href=/tutorials/install-docker/ >Windows Subsystem
+            for Linux</a> provides another option. However, the point remains that maintaining one or more PHP
+            development environments can be difficult…</p>
+        <p>…<em>unless you use Docker</em>.</p>
+        <h2 id=why-use-docker%3F tabindex=-1>Why use Docker? <a class=headlink href=#why-use-docker%3F>#</a></h2>
+        <p>Docker is a tool that can install, configure, and manage software. It places a wrapper around executables
+            known as a <em>container</em>. Containers are launched from pre-configured <em>images</em> which are a
+            snapshot of an executable and its libraries.</p>
+        <blockquote><p>My <a href=/>“Docker for Web Developers” book and video course</a> concisely explains how to
+            adopt Docker for your new and existing projects.</p></blockquote>
+        <p>Docker provides pre-built <a href=https://hub.docker.com/_/php>Apache and PHP images</a> which can be
+            downloaded and run on any OS where Docker is installed (see the <a href=/tutorials/install-docker/ >Docker
+                installation instructions</a>).</p>
+        <p>The following sections describe how to prepare a Docker development environment which can execute PHP files
+            located on your host PC.</p>
+        <h2 id=create-ssl-certificates tabindex=-1>Create SSL certificates <a class=headlink
+                                                                              href=#create-ssl-certificates>#</a></h2>
+        <p>Web apps use HTTPS to ensure communication between the client and the server is encrypted and cannot be
+            intercepted. Google also penalizes content sites which remain on HTTP.</p>
+        <p>For local development, developers either:</p>
+        <ol>
+            <li><p><strong>Use HTTP</strong><br>This means the local and production versions are different. It can be
+                more difficult to spot problems such as linking to insecure assets.</p></li>
+            <li><p><strong>Or use a (fake) self-signed certificate</strong><br>This is closer to the production version
+                but the browser still treats requests differently. For example, fake SSL assets are not cached.</p></li>
+        </ol>
+        <p>A third lesser-known option is <a href=https://github.com/FiloSottile/mkcert>mkcert</a>. This creates a new
+            locally-trusted authority and SSL certificates. As far as the browser is concerned, the HTTPS connection is
+            fully secure despite running on a local domain.</p>
+        <p>Configuring certificates need only be done once and creating them on your local machine will also work in
+            Docker containers or WSL2. Follow the <a href=https://github.com/FiloSottile/mkcert#installation>mkcert
+                installation instructions</a> then install a new local certificate authority in your browsers:</p>
+        <pre class=language-bash><code class=language-bash><span
+                class=highlight-line>mkcert -install</span></code></pre>
+        <p>Firefox requires some additional configuration:</p>
+        <ol>
+            <li>Locate the generated <code>rootCA.pem</code> file by entering <code>mkcert -CAROOT</code> in your
+                terminal.
+            </li>
+            <li>Open Firefox’s menu and choose <strong>Options</strong>, then <strong>Privacy &amp; Security</strong>.
+                Scroll to the bottom and click <strong>View Certificates</strong>. Select the <strong>Authorities
+                    tab</strong>, click <strong>Import…</strong>, open the <code>rootCA.pem</code> file, and restart the
+                browser.
+            </li>
+        </ol>
+        <p>Now create locally-trusted development certificates for your development domain:</p>
+        <pre class=language-bash><code class=language-bash><span class=highlight-line>mkcert localhost <span
+                class="token number">127.0</span>.0.1 ::1</span></code></pre>
+        <p>It’s easier to use <code>localhost</code>, but you can create any domain name as long as it is referenced in
+            your <a href=https://en.wikipedia.org/wiki/Hosts_(file)><code>hosts</code> file</a>.</p>
+        <p>Rename the generated files:</p>
+        <ul>
+            <li><code>cert.pem</code> for the SSL certificate, and</li>
+            <li><code>cert-key.pem</code> for the SSL certificate key file</li>
+        </ul>
+        <p>Create a directory somewhere on your system, e.g. <code>dockerphp</code>, and copy the two <code>.pem</code>
+            files into it.</p>
+        <h2 id=apache-configuration tabindex=-1>Apache configuration <a class=headlink href=#apache-configuration>#</a>
+        </h2>
+        <p>Create a file named <code>000-default.conf</code> in the same directory with the following Apache HTTP and
+            HTTPS configuration. This sets the web to root <code>/var/www/html</code> and references the SSL
+            certificates you created with mkcert:</p>
+        <pre class=language-apacheconf><code class=language-apacheconf><span class=highlight-line><span
+                class="token directive-block tag"><span class="token directive-block tag"><span
+                class="token punctuation">&lt;</span>VirtualHost</span><span
+                class="token directive-block-parameter attr-value"> *<span
+                class="token punctuation">:</span>80</span><span
+                class="token punctuation">></span></span></span><br><span class=highlight-line></span><br><span
+                class=highlight-line>  <span class="token directive-inline property">ServerAdmin</span> admin@localhost</span><br><span
+                class=highlight-line>  <span
+                class="token directive-inline property">DocumentRoot</span> /var/www/html</span><br><span
+                class=highlight-line>  <span class="token directive-inline property">ErrorLog</span> <span
+                class="token variable">${APACHE_LOG_DIR}</span>/error.log</span><br><span class=highlight-line>  <span
+                class="token directive-inline property">CustomLog</span> <span
+                class="token variable">${APACHE_LOG_DIR}</span>/access.log combined</span><br><span
+                class=highlight-line></span><br><span class=highlight-line><span class="token directive-block tag"><span
+                class="token directive-block tag"><span class="token punctuation">&lt;/</span>VirtualHost</span><span
+                class="token punctuation">></span></span></span><br><span class=highlight-line></span><br><span
+                class=highlight-line><span class="token directive-block tag"><span
+                class="token directive-block tag"><span class="token punctuation">&lt;</span>VirtualHost</span><span
+                class="token directive-block-parameter attr-value"> *<span
+                class="token punctuation">:</span>443</span><span
+                class="token punctuation">></span></span></span><br><span class=highlight-line></span><br><span
+                class=highlight-line>  <span class="token directive-inline property">SSLEngine</span> on</span><br><span
+                class=highlight-line>  <span class="token directive-inline property">SSLCertificateFile</span> /etc/apache2/ssl/cert.pem</span><br><span
+                class=highlight-line>  <span class="token directive-inline property">SSLCertificateKeyFile</span> /etc/apache2/ssl/cert-key.pem</span><br><span
+                class=highlight-line></span><br><span class=highlight-line>  <span
+                class="token directive-inline property">ServerAdmin</span> admin@localhost</span><br><span
+                class=highlight-line>  <span
+                class="token directive-inline property">DocumentRoot</span> /var/www/html</span><br><span
+                class=highlight-line>  <span class="token directive-inline property">ErrorLog</span> <span
+                class="token variable">${APACHE_LOG_DIR}</span>/error.log</span><br><span class=highlight-line>  <span
+                class="token directive-inline property">CustomLog</span> <span
+                class="token variable">${APACHE_LOG_DIR}</span>/access.log combined</span><br><span
+                class=highlight-line></span><br><span class=highlight-line><span class="token directive-block tag"><span
+                class="token directive-block tag"><span class="token punctuation">&lt;/</span>VirtualHost</span><span
+                class="token punctuation">></span></span></span></code></pre>
+        <h2 id=docker-configuration tabindex=-1>Docker configuration <a class=headlink href=#docker-configuration>#</a>
+        </h2>
+        <p>Create a file named <code>Dockerfile</code> in your directory and add the following content to build a PHP
+            and Apache image. You can choose from dozens of <a
+                    href=https://github.com/docker-library/docs/blob/master/php/README.md#supported-tags-and-respective-dockerfile-links>starting
+                images at Docker Hub</a> but this example uses <code>php:7.3-apache</code> which has the latest version
+            of PHP 8 on Apache 2.4:</p>
+        <pre class=language-yml><code class=language-yml><span class=highlight-line>FROM php<span
+                class="token punctuation">:</span>8<span class="token punctuation">-</span>apache</span><br><span
+                class=highlight-line></span><br><span class=highlight-line>RUN a2enmod ssl <span
+                class="token important">&amp;&amp;</span> a2enmod rewrite</span><br><span class=highlight-line>RUN mkdir <span
+                class="token punctuation">-</span>p /etc/apache2/ssl</span><br><span class=highlight-line>RUN mv "$PHP_INI_DIR/php.ini<span
+                class="token punctuation">-</span>development" "$PHP_INI_DIR/php.ini"</span><br><span
+                class=highlight-line></span><br><span class=highlight-line>COPY ./ssl/<span class="token important">*.pem</span> /etc/apache2/ssl/</span><br><span
+                class=highlight-line>COPY ./apache/000<span class="token punctuation">-</span>default.conf /etc/apache2/sites<span
+                class="token punctuation">-</span>available/000<span
+                class="token punctuation">-</span>default.conf</span><br><span class=highlight-line></span><br><span
+                class=highlight-line>EXPOSE 80</span><br><span class=highlight-line>EXPOSE 443</span></code></pre>
+        <p>The <code>Dockerfile</code>:</p>
+        <ol>
+            <li>Enables Apache’s SSL and rewrite modules. Further modules can be enabled if necessary.</li>
+            <li>Copies the PHP development configuration file to <code>php.ini</code> so errors and warnings are shown.
+            </li>
+            <li>Creates an <code>/etc/apache2/ssl</code> directory and copies the SSL <code>.pem</code> certificate
+                files <a href=#ssl-certificates>created above</a>.
+            </li>
+            <li>Copies the <a href=#apache-configuration>Apache configuration file</a>.</li>
+            <li>Exposes ports 80 and 443 for HTTP and HTTPS accordingly.</li>
+        </ol>
+        <p>If necessary, you can define a your own <code>php.ini</code> file and <code>COPY</code> it into the image at
+            <code>/usr/local/etc/php/php.ini</code>.</p>
+        <aside><p><strong>Note</strong>: the separate <code>Dockerfile</code> <code>RUN</code> commands can be merged on
+            to one line and separated with <code>&amp;&amp;</code>. This makes the Docker build process faster and more
+            efficient although the code is more difficult to read.</p></aside>
+        <h2 id=build-the-php-docker-image tabindex=-1>Build the PHP Docker image <a class=headlink
+                                                                                    href=#build-the-php-docker-image>#</a>
+        </h2>
+        <p>Build a Docker image named <code>php8</code> from your <code>Dockerfile</code> by navigating to the directory
+            in a terminal and entering:</p>
+        <pre class=language-bash><code class=language-bash><span class=highlight-line>docker image build -t php8 <span
+                class="token builtin class-name">.</span></span></code></pre>
+        <p><em>(The last <code>.</code> period is important!)</em></p>
+        <p>Assuming you don’t have errors, a new Docker image will be built. Run <code>docker image ls</code> to see
+            <code>php8</code> in the list of images.</p>
+        <h2 id=launch-a-php-container tabindex=-1>Launch a PHP container <a class=headlink href=#launch-a-php-container>#</a>
+        </h2>
+        <p>You can now start a Docker container from the <code>php8</code> image. Navigate to any directory containing a
+            PHP project and run the following <code>docker</code> command:</p>
+        <pre class=language-bash><code class=language-bash><span class=highlight-line>docker run <span
+                class="token punctuation">\</span></span><br><span class=highlight-line>  -it --rm <span
+                class="token punctuation">\</span></span><br><span class=highlight-line>  -p <span class="token number">8080</span>:80 -p <span
+                class="token number">443</span>:443 <span class="token punctuation">\</span></span><br><span
+                class=highlight-line>  --name php8site <span class="token punctuation">\</span></span><br><span
+                class=highlight-line>  -v <span class="token string">"<span
+                class="token environment constant">$PWD</span>"</span>:/var/www/html <span
+                class="token punctuation">\</span></span><br><span class=highlight-line>  php8</span></code></pre>
+        <aside><p>Windows Powershell users must remove the line-breaks and <code>\</code> backslashes from the command.
+            Additionally, <code>$PWD</code> references the current directory on Linux and macOS. This cannot be used on
+            Windows so the full path must be specified in Linux notation, e.g.</p>
+            <pre class=language-bash><code class=language-bash><span class=highlight-line>-v /c/projects/mysite:/var/www/html</span></code></pre>
+        </aside>
+        <p>The container will continue to run until it is stopped with <kbd>Ctrl</kbd> | <kbd>Cmd</kbd> + <kbd>C</kbd>.
+        </p>
+        <p>Alternately, you may find it easier to launch the container with Docker Compose. Create a new <code>docker-compose.yml</code>
+            file in the PHP project directory with the following content:</p>
+        <pre class=language-yml><code class=language-yml><span class=highlight-line><span class="token key atrule">version</span><span
+                class="token punctuation">:</span> <span class="token string">'3'</span></span><br><span
+                class=highlight-line><span class="token key atrule">services</span><span
+                class="token punctuation">:</span></span><br><span class=highlight-line></span><br><span
+                class=highlight-line>  <span class="token key atrule">php8site</span><span
+                class="token punctuation">:</span></span><br><span class=highlight-line>    <span
+                class="token key atrule">image</span><span class="token punctuation">:</span> php8</span><br><span
+                class=highlight-line>    <span class="token key atrule">container_name</span><span
+                class="token punctuation">:</span> php8site</span><br><span class=highlight-line>    <span
+                class="token key atrule">volumes</span><span class="token punctuation">:</span></span><br><span
+                class=highlight-line>      <span class="token punctuation">-</span> ./<span
+                class="token punctuation">:</span>/var/www/html</span><br><span class=highlight-line>    <span
+                class="token key atrule">ports</span><span class="token punctuation">:</span></span><br><span
+                class=highlight-line>      <span class="token punctuation">-</span> <span
+                class="token string">"8080:80"</span></span><br><span class=highlight-line>      <span
+                class="token punctuation">-</span> <span class="token string">"443:443"</span></span></code></pre>
+        <p>The Apache/PHP container can then be launched from that directory with:</p>
+        <pre class=language-bash><code class=language-bash><span
+                class=highlight-line>docker-compose up</span></code></pre>
+        <p>and stopped in another terminal with:</p>
+        <pre class=language-bash><code class=language-bash><span class=highlight-line>docker-compose down</span></code></pre>
+        <h2 id=run-php-code tabindex=-1>Run PHP code <a class=headlink href=#run-php-code>#</a></h2>
+        <p>The host directory where the Docker container is launched is bind-mounted into the container at the Apache
+            <code>/var/www/html</code> root. The standard port <code>443</code> is available for HTTPS connections and
+            port <code>8080</code> forwards to HTTP port <code>80</code> to avoid conflicts with applications such as
+            Skype.</p>
+        <p>You can test PHP execution with an example <code>index.php</code> file:</p>
+        <pre class=language-php><code class=language-php><span class="token php language-php"><span
+                class="token delimiter important">&lt;?php</span><br><span class=highlight-line><span
+                class="token function">phpinfo</span><span class="token punctuation">(</span><span
+                class="token punctuation">)</span><span class="token punctuation">;</span></span></span></code></pre>
+        <p>Launch it in your browser at <code>http://localhost:8080/</code> or <code>https://localhost/</code>. The
+            HTTPS version will use the <a href=#ssl-certificates>mkcert SSL</a> but, unlike self-signed certificates,
+            the browser will not throw a security alert.</p>
+        <h2 id=dynamic-docker-development tabindex=-1>Dynamic Docker development <a class=headlink
+                                                                                    href=#dynamic-docker-development>#</a>
+        </h2>
+        <p>A little knowledge of Docker is all that’s required to create a secure Apache and PHP development
+            environment. The benefits:</p>
+        <ul>
+            <li>you did not need to manually download, install, or configure additional software</li>
+            <li>your OS has not changed – the container cannot conflict with other versions of Apache or PHP you have
+                installed
+            </li>
+            <li>the container will work identically on any other OS without modification.</li>
+        </ul>
+        <p>Finally…</p>
+        <blockquote><p>You’re not limited to PHP and Apache! Docker can manage whatever server, language runtimes,
+            databases, or other software dependencies your project needs.</p></blockquote>
+        <hr>
+        <p>Do you want an easy-to-follow course which demonstrates how to use Docker and create practical web
+            development environments on your Windows, macOS, or Linux PC?</p>
+        <p><a href=/><em>Buy the "Docker for Web Developers" book &amp; video course&hellip;</em></a></p>
+        <ul class=prices>
+            <li class=feature><a data-view=buyall href="https://gum.co/DockerWebDev?wanted=true"><h2>full course</h2>
+                <p class=price>$99 <span>&pound;74 &nbsp;/&nbsp; &euro;87</span></p>
+                <p class=button>buy all</p></a></li>
+            <li><a data-view=buybook href="https://gum.co/DockerWebDevBook?wanted=true"><h2>ebooks only</h2>
+                <p class=price>$30 <span>&pound;22 &nbsp;/&nbsp; &euro;26</span></p>
+                <p class=button>buy books</p></a></li>
+            <li><a data-view=buyvideo href="https://gum.co/DockerWebDevVideos?wanted=true"><h2>videos only</h2>
+                <p class=price>$80 <span>&pound;60 &nbsp;/&nbsp; &euro;71</span></p>
+                <p class=button>buy videos</p></a></li>
+        </ul>
+        <p class=note><em>plus your country's sales tax where applicable</em></p></article>
+    <nav class=taglist>
+        <ul>
+            <li>topics:</li>
+            <li><a href=/tag/apache/ class="icon tag">apache</a></li>
+            <li><a href=/tag/php/ class="icon tag">php</a></li>
+            <li><a href=/tag/ssl/ class="icon tag">ssl</a></li>
+        </ul>
+    </nav>
+    <nav class=nextback>
+        <ul>
+            <li class=next><a href=/tutorials/clean-up-docker/ ><em class="icon next">next</em> <strong>How to clean
+                your Docker data</strong></a></li>
+            <li class=back><a href=/tutorials/docker-live-course/ ><em class="icon back">back</em> <strong>An
+                introduction to Docker: LIVE training course</strong></a></li>
+        </ul>
+    </nav>
+</main>
+<footer class="flex2 slantlight2">
+    <section>
+        <div id=intent><h2>Share page</h2>
+            <ul class=iconlist>
+                <li id=shareapp><a data-view=share href=#shareapp class="icon share">device app</a></li>
+                <li><a data-view=sharetwitter href="https://twitter.com/intent/tweet?url=$url$&amp;text=$title$"
+                       class="social icon twitter">Twitter</a></li>
+                <li><a data-view=sharefacebook href="https://www.facebook.com/sharer/sharer.php?u=$url$"
+                       class="social icon facebook">Facebook</a></li>
+                <li><a data-view=sharelinkedin
+                       href="https://www.linkedin.com/shareArticle?mini=true&url=$url$&amp;title=$title$"
+                       class="social icon linkedin">LinkedIn</a></li>
+                <li><a data-view=shareemail href="mailto:?subject=$title$&amp;body=$url$" class="social icon email">email</a>
+                </li>
+                <li id=shareurl class=copyable><a data-view=sharecopy href=#shareurl class="icon copy"
+                                                  data-copyable=$url$ data-copyable-done="URL copied">copy URL</a></li>
+            </ul>
+        </div>
+        <div id=install><h2>Install</h2>
+            <ul class=iconlist>
+                <li><a href=#install data-view=install class="icon download">add to home screen</a></li>
+            </ul>
+        </div>
+        <div id=subscribe><h2>Subscribe</h2>
+            <ul class=iconlist>
+                <li><a data-view=newsletter href=https://tinyletter.com/dockerwebdev class="icon news">email
+                    newsletter</a></li>
+                <li><a data-view=rss href=/feed.xml class="icon rss">RSS feed</a></li>
+            </ul>
+            <p>Newsletter subscribers are under no obligation to buy the course. Your email address won't be spammed or
+                given to others. See my <a href=/privacy-policy/ >privacy policy</a>.</p></div>
+    </section>
+    <section id=contact><h2>Contact</h2>
+        <ul class=iconlist>
+            <li><a data-view=email href=# class="icon email">craig {at} dockerwebdev dot com</a></li>
+            <li><a data-view=chatroom href=https://discord.com/channels/714109256072429630/714110949409423433
+                   class="icon chat">course chat room</a></li>
+            <li><a data-view=twitter href=https://twitter.com/craigbuckler class="icon twitter">@craigbuckler</a></li>
+        </ul>
+    </section>
+</footer>
+<script type=application/ld+json>{
+    "@context": "http://schema.org/",
+    "@type": "TechArticle",
+    "proficiencyLevel": "beginner",
+    "headline": "Setup an Apache, PHP, and HTTPS development environment with Docker",
+    "description": "Quickly create a robust PHP project development environment on your local machine with Apache and locally-trusted HTTPS certificates.",
+    "datePublished": "2021-03-12",
+    "dateModified": "2021-03-12",
+    "inLanguage": "English",
+    "contentLocation": "online",
+    "accessMode": [
+        "textual"
+    ],
+    "accessModeSufficient": "textual",
+    "isFamilyFriendly": true,
+    "wordCount": "1500",
+    "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "https://dockerwebdev.com/tutorials/docker-php-development/"
+    },
+    "image": {
+        "@type": "imageObject",
+        "url": "https://dockerwebdev.com/images/share/docker-apache-php-https.png",
+        "width": "1000",
+        "height": "500"
+    },
+    "author": {
+        "@type": "Person",
+        "name": "Craig Buckler"
+    },
+    "publisher": {
+        "@type": "Organization",
+        "name": "Docker for Web Developers",
+        "logo": {
+            "@type": "ImageObject",
+            "url": "https://dockerwebdev.com/images/icon/logo.png",
+            "width": 50,
+            "height": 50
+        }
+    }
+}</script>
+<script type=application/ld+json>{
+    "@context": "https://schema.org/",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+        {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Docker tutorials",
+            "item": "https://dockerwebdev.com/tutorials/"
+        },
+        {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Setup an Apache, PHP, and HTTPS development environment with Docker",
+            "item": "https://dockerwebdev.com/tutorials/docker-php-development/"
+        }
+    ]
+}</script><!-- Cloudflare Pages Analytics -->
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+        data-cf-beacon='{"token": "da87c01e2cea44108062dccf0e10610d"}'></script><!-- Cloudflare Pages Analytics -->
+</body>
+</html>
