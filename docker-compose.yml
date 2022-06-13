@@ -13,6 +13,7 @@ services:
       - database
     volumes:
       - ${DOCUMENT_ROOT-./www}:/var/www/html
+      - ${APP_ROOT-./root}:/var/www
       - ${PHP_INI-./config/php/php.ini}:/usr/local/etc/php/php.ini
       - ${VHOSTS_DIR-./config/vhosts}:/etc/apache2/sites-enabled
       - ${SSL_VOLUME-./config/ssl}:/etc/apache2/ssl
