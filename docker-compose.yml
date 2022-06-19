@@ -1,34 +1,61 @@
 version: "3.8"
 
 services:
-  webserver1:
+  php-fpm:
     build:
-      context: ./bin/${PHPVERSION1}
-    container_name: '${COMPOSE_PROJECT_NAME}-${PHPVERSION1}'
+      context: ./bin/php81-fpm
+    container_name: 'php81-fpm'
     restart: 'always'
+    working_dir: /var/www
     ports:
-      - "${HOST_MACHINE_UNSECURE_HOST_PORT1}:80"
-      - "${HOST_MACHINE_SECURE_HOST_PORT1}:443"
-    depends_on:
-      - database
+      - "9000:9000"
     volumes:
       - ${DOCUMENT_ROOT-./www}:/var/www
       - ${PHP_INI-./config/php/php.ini}:/usr/local/etc/php/php.ini
-      - ${VHOSTS_DIR-./config/vhosts}:/etc/apache2/sites-enabled
-      - ${SSL_VOLUME-./config/ssl}:/etc/apache2/ssl
-      - ${LOG_DIR-./logs/apache2}:/var/log/apache2
-      - ${XDEBUG_LOG_DIR-./logs/xdebug}:/var/log/xdebug
-    environment:
-      APACHE_DOCUMENT_ROOT: ${APACHE_DOCUMENT_ROOT-/var/www/html}
-      PMA_PORT: ${HOST_MACHINE_PMA_PORT}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      HOST_MACHINE_MYSQL_PORT: ${HOST_MACHINE_MYSQL_PORT}
-      XDEBUG_CONFIG: "client_host=host.docker.internal remote_port=${XDEBUG_PORT}"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    depends_on:
+      - database
+  nginx:
+    image: nginx:alpine
+    container_name: 'nginx'
+    restart: 'always'
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ${DOCUMENT_ROOT-./www}:/var/www
+      - ${NGINX_CONFIG-./config/nginx/}:/etc/nginx/conf.d/
+      - ${SSL_VOLUME-./config/ssl}:/etc/ssl
+    depends_on:
+      - php-fpm
+
+#   webserver1:
+#     build:
+#       context: ./bin/${PHPVERSION1}
+#     container_name: '${COMPOSE_PROJECT_NAME}-${PHPVERSION1}'
+#     restart: 'always'
+#     ports:
+#       - "${HOST_MACHINE_UNSECURE_HOST_PORT1}:80"
+#       - "${HOST_MACHINE_SECURE_HOST_PORT1}:443"
+#     depends_on:
+#       - database
+#     volumes:
+#       - ${DOCUMENT_ROOT-./www}:/var/www
+#       - ${PHP_INI-./config/php/php.ini}:/usr/local/etc/php/php.ini
+#       - ${VHOSTS_DIR-./config/vhosts}:/etc/apache2/sites-enabled
+#       - ${SSL_VOLUME-./config/ssl}:/etc/apache2/ssl
+#       - ${LOG_DIR-./logs/apache2}:/var/log/apache2
+#       - ${XDEBUG_LOG_DIR-./logs/xdebug}:/var/log/xdebug
+#     environment:
+#       APACHE_DOCUMENT_ROOT: ${APACHE_DOCUMENT_ROOT-/var/www/html}
+#       PMA_PORT: ${HOST_MACHINE_PMA_PORT}
+#       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+#       MYSQL_USER: ${MYSQL_USER}
+#       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+#       MYSQL_DATABASE: ${MYSQL_DATABASE}
+#       HOST_MACHINE_MYSQL_PORT: ${HOST_MACHINE_MYSQL_PORT}
+#       XDEBUG_CONFIG: "client_host=host.docker.internal remote_port=${XDEBUG_PORT}"
+#     extra_hosts:
+#       - "host.docker.internal:host-gateway"
 #  webserver2:
 #    build:
 #      context: ./bin/${PHPVERSION2}
